@@ -16,7 +16,7 @@ import plotly.express as px
 
 from dataprep.clean import clean_phone,validate_phone
 
-
+import re
 
 import dash
 from dash import dcc
@@ -46,11 +46,17 @@ df = pd.read_csv('/Users/koreynishimoto/Desktop/Takehome/'
 ############################################################
 ##Clean Phone number##
 
+df['phone'] = df['phone'].str.replace(')',') ')
+
+#some phone numbers have 9 characters. This is possiblle due to a leading
+#0 which the computer deleted. ex: 04 = 4
+df['phone']=df['phone'].str.zfill(10)
+df['work phone']=df['work phone'].str.zfill(10)
 
 
-
+#clean numbers
 df=clean_phone(df, "phone", output_format="national")
-df=clean_phone(df, "work phone")
+df=clean_phone(df, "work phone", output_format="national")
 
 sixth_column = df.pop('phone_clean')
 fourteenth_column = df.pop('work phone_clean')
@@ -59,6 +65,9 @@ df.insert(14, 'Work phone clean', fourteenth_column)
 
 
 df["valid phone"] = validate_phone(df["phone"])
+
+df["Phone clean"].fillna(df["phone"], inplace=True)
+df["Work phone clean"].fillna(df["work phone"], inplace=True)
 
 seventh_column = df.pop('valid phone')
 df.insert(7, 'Valid phone', seventh_column)
@@ -71,10 +80,10 @@ df.drop_duplicates(keep = False, inplace = True)
 
 
 
-
-#Checking for duplicates of important information
 '''
-#Showed 723 duplicated names
+#Checking for duplicates of important information
+
+#Showed 723 duplicated names. This includes NA
 df.drop_duplicates(subset ="name",keep = False, inplace = True)
 
 
@@ -82,7 +91,7 @@ df.drop_duplicates(subset ="name",keep = False, inplace = True)
 dupname = df[df.duplicated(subset='name',keep=False)]
 dupname = dupname[dupname.duplicated(subset='email',keep=False)]
 
-#No shared Phone numbers with shared name
+#No shared Phone numbers with shared name. This includes NA
 dupname = dupname[dupname.duplicated(subset='phone',keep=False)]
 
 dupname = dupname.sort_values('name')
@@ -93,10 +102,26 @@ dupname = dupname.sort_values('name')
 
 dupemail = df[df.duplicated(subset='email',keep=False)]
 
+# Showed there are 25 duplicated phone numbers. No overlap with missing emails. 
 dupephone = df[df.duplicated(subset='phone',keep=False)]
 
+#no duplicated work email but missing 30. May be better to send emails this way.
+dupework = df[df.duplicated(subset='work email',keep=False)]
 
-print(dupephone)
+
+#no duplicate work phone numbers but missing 31. Call this way.
+dupeworkp = df[df.duplicated(subset='work phone',keep=False)]
+print(len(dupephone))
+
+
+#691 duplicate work
+dupework = df[df.duplicated(subset='work',keep=False)]
+dupework = dupework.sort_values('work')
+print(dupework)
+
+dupework['work'].value_counts()
+
+dupework.loc[dupework['work']=='Smith and Sons']['work state'].value_counts()
 '''
 
 #Split first and last Name
@@ -118,9 +143,15 @@ print('There are ' + str(len(emptyname)) + ' rows with no name. These rows can b
 
 
 #split date from time
-df[['Date']]=df['account created on'].str.split(expand=True)[0]
+df[['Date']] = df['account created on'].str.split(expand=True)[0]
 
 
+#df['Date'] = pd.to_datetime(df['Date'],format='%m/%d/%y')
+ 
+
+df['Year created'] = df['Date'].str.replace('.*(?<=/)', '', regex=True)
+
+accountcount=df['Year created'].value_counts(dropna=False)
 
 #split email to account and server name
 df[['Email Name','Server']]=df['email'].str.split('@',expand=True)
