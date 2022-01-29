@@ -14,7 +14,8 @@ import matplotlib.dates as mdates
 import datetime
 import plotly.express as px
 
-from dataprep.clean import clean_phone
+from dataprep.clean import clean_phone,validate_phone
+
 
 
 import dash
@@ -48,6 +49,21 @@ df = pd.read_csv('/Users/koreynishimoto/Desktop/Takehome/'
 
 
 
+df=clean_phone(df, "phone", output_format="national")
+df=clean_phone(df, "work phone")
+
+sixth_column = df.pop('phone_clean')
+fourteenth_column = df.pop('work phone_clean')
+df.insert(6, 'Phone clean', sixth_column)
+df.insert(14, 'Work phone clean', fourteenth_column)
+
+
+df["valid phone"] = validate_phone(df["phone"])
+
+seventh_column = df.pop('valid phone')
+df.insert(7, 'Valid phone', seventh_column)
+
+
 
 
 #Showed no duplicate rows
@@ -70,7 +86,7 @@ dupname = dupname[dupname.duplicated(subset='email',keep=False)]
 dupname = dupname[dupname.duplicated(subset='phone',keep=False)]
 
 dupname = dupname.sort_values('name')
-'''
+
 
 #Showed 436 duplicate emails. Important when advertising since
 #only one person may get the advertisement.
@@ -81,17 +97,17 @@ dupephone = df[df.duplicated(subset='phone',keep=False)]
 
 
 print(dupephone)
-
+'''
 
 #Split first and last Name
 
 df[['First Name','Last Name']]=df.name.str.split(expand=True)
 
 
-first_column = df.pop('First Name')
-second_column = df.pop('Last Name')
-df.insert(0, 'First Name', first_column)
-df.insert(1, 'Last Name', second_column)
+second_column = df.pop('First Name')
+third_column = df.pop('Last Name')
+df.insert(1, 'First Name', second_column)
+df.insert(2, 'Last Name', third_column)
 
 #Finding rows with no name.
 emptyname = df[df["name"].isnull()][df.columns[df.isnull().any()]]
@@ -270,4 +286,4 @@ if __name__ == '__main__':
 '''
 
 df.to_csv('/Users/koreynishimoto/Desktop/Takehome/newtakehome.csv')
-dupname.to_csv('/Users/koreynishimoto/Desktop/Takehome/dupname.csv')
+
