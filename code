@@ -333,7 +333,7 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("Online Sales", className="display-4"),
+        html.H2("Take-home Exam", className="display-4"),
         html.Hr(),
         html.P(
             "Pick a category you would like displayed", className="lead"
@@ -372,42 +372,29 @@ def render_page_content(pathname):
     if pathname == "/":
         return [ 
             
+        dbc.Row([  
                dbc.CardImg(src=app.get_asset_url('img2.jpg'),
                     style={'height':'6cm', 'width' : '14cm','textAlign': 'center'}),
                
                     
-             dbc.Row([    
+               
                 dbc.Col(
                     dbc.Card(
                             dbc.CardBody(
                                 [  
-                                    html.H5("Introduction to Dashboards", className="card-title"),
+                                    html.H5("Take-home Exam Dashboard", className="card-title"),
                                     html.P(
-                                        "This is a dashboard which features a sidebar, cards, images, tables, and interactive visuals to represent data."
-                                        " The intent of this dashboard is to demonstrate the many different features found in Dash."
+                                        'Using python, write some assessment and cleaning routines. '+
+                                        'Provide a short write-up of what you observe about the data, how to review for reasonableness, and how to correct any errors or inconsistencies. ' 
+                                        'Submit all your code, notes, and altered. ' 
                                         ),
                                     dbc.Button("FHB's Website", size="lg", id= 'Button-1', style={'backgroundColor':"#022248"},href="https://www.fhb.com/en/personal"),
                                     ]
                                 ),
                             style={'backgroundColor': "#011833",'height':'6cm'},
                           ),
-                  width=5),
-                dbc.Col(
-                    dbc.Card(
-                            dbc.CardBody(
-                                [  
-                                    html.H5("Introduction to Dashboards", className="card-title"),
-                                    html.P(
-                                        "This is a dashboard which features a sidebar, cards, images, tables, and interactive visuals to represent data."
-                                        " The intent of this dashboard is to demonstrate the many different features found in Dash."
-                                        ),
-                                    dbc.Button("FHB's Website", size="lg", id= 'Button-1', style={'backgroundColor':"#022248"},href="https://www.fhb.com/en/personal"),
-                                    ]
-                                ),
-                            style={'backgroundColor': "#011833",'height':'6cm'},
-                          ),
-                  width=5
-                  )
+                  width=6),
+                
                 
                     ],
                 ),
@@ -467,9 +454,10 @@ def render_page_content(pathname):
         
         return [
             html.Div([
-            html.H1(children='Hello Dash'),
+            html.H1(children='Choropleth Map'),
 
-            html.Div(children='Take home'),
+            html.Div(children=' This map is a distribution of the number of accounts '
+                     + 'opened accross the country.'),
     
             dcc.Graph(
                 id='Map',
@@ -477,7 +465,13 @@ def render_page_content(pathname):
                 ),
     
         
-     
+            html.H1(children='Line Chart'),
+
+            html.Div(children=' The Line chart shows the number of accoutns opened '
+                     +'from 1970-2017.'),
+           
+            
+            
             dcc.Graph(
                 id = 'example-graph0',
                 figure = accounts,
