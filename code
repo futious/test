@@ -11,19 +11,19 @@ import plotly.express as px
 
 from dataprep.clean import clean_phone,validate_phone
 
-import re
+
 
 import dash
-from dash import dcc
-
-from dash import html
+from dash import dcc, html
 from dash.dependencies import Input, Output
 import dash_table
 
-
 import dash_bootstrap_components as dbc
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__,meta_tags=[...])
+
+
+
 
 app = dash.Dash(
                 external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -31,7 +31,6 @@ app = dash.Dash(
       )
 
 app.title = 'Takehome Test'
-
 
 
 #############################################################
@@ -169,8 +168,13 @@ emailcount=df['Server'].value_counts(dropna=False)
 
 #df[df['Date'].str.contains('2/29',na=False)]
 
+print( ' There are ' + str(len(df[df['email'].isnull()].sort_values('Year created'))) + 
+                           " emails that are NA.")
 
-
+print( ' There are ' + str(len(df[df['phone'].isnull()])) +
+                               " phone numbers are NA")
+print( ' There are ' + str(len(df[df['address'].isnull()])) +
+                               " address numbers are NA")
 
 
 
@@ -239,12 +243,18 @@ mapfig = px.choropleth(data_frame = df,
                     locations = 'Code',
                     locationmode = 'USA-states',
                     color = 'Code Count',
-                    #color_continuous_scale=px.colors.sequential.Plotly3,
                     hover_name = "state",  
                     height = 800,
                     range_color = (150,230),
                     scope='usa'
                     )
+
+mapfig.update_layout(
+            plot_bgcolor="#011833",
+            paper_bgcolor="#022248",
+            geo_bgcolor="#011833",
+            font=dict(color="white"),
+            )
 
 
 
@@ -289,6 +299,8 @@ top_cities = px.bar(data_frame = city_account_count,
 #############################################################################
 
 colors = {"background": "#011833", "text": "#7FDBFF"}
+
+template = 'plotly_dark'
 
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
@@ -359,26 +371,12 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content],
 def render_page_content(pathname):
     if pathname == "/":
         return [ 
-            html.H1('Online Sales and Distribution'),
             
-         
-            
-            html.Div('This dashboard will be used to show visual representations of data. Below is the pertinent information.'
-                     +' For a more detailed visual representation use the side bar to navigate.',
-                   ),
-                
-            
-            
-            
-            dbc.Row([
-            
-                dbc.Col(
+               dbc.CardImg(src=app.get_asset_url('img2.jpg'),
+                    style={'height':'6cm', 'width' : '14cm','textAlign': 'center'}),
+               
                     
-                    dbc.CardImg(src=app.get_asset_url('img1.jpg'),
-                    style={'height':'6cm'}),
-                    
-                    ),
-                
+             dbc.Row([    
                 dbc.Col(
                     dbc.Card(
                             dbc.CardBody(
@@ -388,19 +386,74 @@ def render_page_content(pathname):
                                         "This is a dashboard which features a sidebar, cards, images, tables, and interactive visuals to represent data."
                                         " The intent of this dashboard is to demonstrate the many different features found in Dash."
                                         ),
-                                    dbc.Button("Korey's Website", size="lg", id= 'Button-1', color="primary",href="https://koreyandmath.wordpress.com"),
+                                    dbc.Button("FHB's Website", size="lg", id= 'Button-1', style={'backgroundColor':"#022248"},href="https://www.fhb.com/en/personal"),
                                     ]
                                 ),
                             style={'backgroundColor': "#011833",'height':'6cm'},
                           ),
-                  width=8
+                  width=5),
+                dbc.Col(
+                    dbc.Card(
+                            dbc.CardBody(
+                                [  
+                                    html.H5("Introduction to Dashboards", className="card-title"),
+                                    html.P(
+                                        "This is a dashboard which features a sidebar, cards, images, tables, and interactive visuals to represent data."
+                                        " The intent of this dashboard is to demonstrate the many different features found in Dash."
+                                        ),
+                                    dbc.Button("FHB's Website", size="lg", id= 'Button-1', style={'backgroundColor':"#022248"},href="https://www.fhb.com/en/personal"),
+                                    ]
+                                ),
+                            style={'backgroundColor': "#011833",'height':'6cm'},
+                          ),
+                  width=5
                   )
                 
                     ],
                 ),
             
-            html.Div('The table below is a summary of important information. This information can also be found using the tabls to the left. '
+            html.Div('The table below is a summary of important information.  '
                    ),
+            
+            dash_table.DataTable(
+                    id='table',
+                    columns=[
+                        {'name': 'Category',
+                         'id': 'column1'
+                         },
+                        {'name': 'Name',
+                         'id': 'column2'
+                         },
+                        {'name': 'Info',
+                         'id': 'column3'
+                         },
+                        
+                        ],
+                    data=[
+                        {'column1': 'Email','column2': 'yahoo.com','column3': emailcount.iloc[[0]].iloc[0] },
+                        {'column1': 'Email','column2': 'gmail.com' ,'column3': emailcount.iloc[[1]].iloc[0]},
+                        {'column1': 'Email','column2': 'hotmail.com' ,'column3': emailcount.iloc[[2]].iloc[0]},
+                        {'column1': 'Email','column2': 'NA' ,'column3': emailcount.iloc[[3]].iloc[0]},
+                        {'column1': 'Duplicate','column2': 'Phone numbers' ,'column3': str(len(df[df.duplicated(subset='phone',keep=False)])) + ' but all are NA.'},
+                        {'column3': 'There are only 25 missing phone numbers with no duplicats. Greate way to get in contact with customer.'},
+                        {'column1': 'Duplicate','column2': 'Emails' ,'column3': str(len(df[df.duplicated(subset='email',keep=False)])) + ' with ' + str(len(df[df.duplicated(subset='email',keep=False)]['email'].dropna())) + ' not NA.'},   
+                        {'column3': 'Emails have many overlaps and thus is not a good way to get in contact with customers.'},
+                        {'column1': 'Duplicate','column2': 'Work Email' ,'column3': str(len(df[df.duplicated(subset='work email',keep=False)])) + ' but all are NA.'},
+                        {'column3': 'With respects to email, work email is much better than personal email.'},
+                        {'column1': 'Duplicate','column2': 'Work phone numbers' ,'column3': str(len(df[df.duplicated(subset='work phone',keep=False)])) + ' but all are NA.'},                       
+                        {'column3': 'Work phone number is essially as good as personal phone numbers.'},
+                        {'column1': 'Missing', 'column2' : 'Name', 'column3' : 'There are ' + str(len(emptyname)) + ' rows with no name.'},
+                        {'column3': 'These rows can be found in the readme.'},
+                        
+                    
+                    ],
+                    
+                    page_action='none',
+                    fixed_rows={'headers': True},
+                    style_table={'height': '500px', 'overflowY': 'auto'},
+                    style_header={'backgroundColor': 'rgb(30, 30, 30)','color': 'white'},
+                    style_data={'backgroundColor': 'rgb(50, 50, 50)','color': 'white'},
+            ),
                 
             ]    
      
@@ -423,32 +476,7 @@ def render_page_content(pathname):
                 figure=mapfig
                 ),
     
-            dash_table.DataTable(
-                    id='table',
-                    columns=[
-                        {'name': 'Emails',
-                         'id': 'column1'
-                         },
-                        {'name': 'Count',
-                         'id': 'column2'
-                         },
-                        
-                        ],
-                    data=[
-                        {'column1': 'yahoo.com','column2': emailcount.iloc[[0]].iloc[0] },
-                        {'column1': 'gmail.com' ,'column2': emailcount.iloc[[1]].iloc[0]},
-                        {'column1': 'hotmail.com' ,'column2': emailcount.iloc[[2]].iloc[0]},
-                        {'column1': 'NA' ,'column2': emailcount.iloc[[3]].iloc[0]},
-                       
-                      
-                    ],
-                    
-                    page_action='none',
-                    fixed_rows={'headers': True},
-                    style_table={'height': '200px', 'overflowY': 'auto'},
-                    style_header={'backgroundColor': 'rgb(30, 30, 30)','color': 'white'},
-                    style_data={'backgroundColor': 'rgb(50, 50, 50)','color': 'white'},
-            ),
+        
      
             dcc.Graph(
                 id = 'example-graph0',
@@ -524,9 +552,8 @@ def update_hgraph(top):
 
 
 if __name__ == '__main__':
-        app.run_server(host = '127.0.0.1', debug=True, port = 8060)                  
-    
-
+        app.run_server(host = '0.0.0.0', debug=True, port = 8070)                  
+        
 
 
 df.to_csv('/Users/koreynishimoto/Desktop/Takehome/newtakehome.csv')
