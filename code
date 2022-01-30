@@ -82,7 +82,11 @@ df.drop_duplicates(keep = False, inplace = True)
 
 
 
-'''
+''' This section would be deleted after generating the report and
+has only been kept for reviewing purposes of the test.
+
+
+
 #Checking for duplicates of important information
 
 #Showed 723 duplicated names. This includes NA
@@ -91,7 +95,7 @@ df.drop_duplicates(subset ="name",keep = False, inplace = True)
 
 #No shared emails with shared name
 dupname = df[df.duplicated(subset='name',keep=False)]
-dupname = dupname[dupname.duplicated(subset='email',keep=False)]
+dupname = dupname[dupname.duplicated(subset='phone',keep=False)]
 
 #No shared Phone numbers with shared name. This includes NA
 dupname = dupname[dupname.duplicated(subset='phone',keep=False)]
@@ -100,30 +104,31 @@ dupname = dupname.sort_values('name')
 
 
 #Showed 436 duplicate emails. Important when advertising since
-#only one person may get the advertisement.
+#only one person may get the advertisement. 32 are NaN
 
 dupemail = df[df.duplicated(subset='email',keep=False)]
+df[df.duplicated(subset='email',keep=False)]['email'].isnull().value_counts()
 
 # Showed there are 25 duplicated phone numbers. No overlap with missing emails. 
-dupephone = df[df.duplicated(subset='phone',keep=False)]
+dupphone = df[df.duplicated(subset='Phone clean',keep=False)]
 
 #no duplicated work email but missing 30. May be better to send emails this way.
-dupework = df[df.duplicated(subset='work email',keep=False)]
+dupwork = df[df.duplicated(subset='work email',keep=False)]
 
 
 #no duplicate work phone numbers but missing 31. Call this way.
-dupeworkp = df[df.duplicated(subset='work phone',keep=False)]
+dupworkp = df[df.duplicated(subset='Work phone clean',keep=False)]
 print(len(dupephone))
 
 
 #691 duplicate work
-dupework = df[df.duplicated(subset='work',keep=False)]
-dupework = dupework.sort_values('work')
-print(dupework)
+dupwork = df[df.duplicated(subset='work',keep=False)]
+dupwork = dupwork.sort_values('work')
+print(dupwork)
 
-dupework['work'].value_counts()
+dupwork['work'].value_counts()
 
-dupework.loc[dupework['work']=='Smith and Sons']['work state'].value_counts()
+dupwork.loc[dupwork['work']=='Smith and Sons']['work state'].value_counts()
 '''
 
 
@@ -166,7 +171,7 @@ df[['Email Name','Server']]=df['email'].str.split('@',expand=True)
 
 emailcount=df['Server'].value_counts(dropna=False)
 
-#df[df['Date'].str.contains('2/29',na=False)]
+
 
 print( ' There are ' + str(len(df[df['email'].isnull()].sort_values('Year created'))) + 
                            " emails that are NA.")
@@ -546,11 +551,8 @@ def update_hgraph(top):
 
 
 if __name__ == '__main__':
-        app.run_server(host = '0.0.0.0', debug=True, port = 8070)                  
+        app.run_server(host = '0.0.0.0', debug=True, port = 8060)                  
         
 
 
 df.to_csv('/Users/koreynishimoto/Desktop/Takehome/newtakehome.csv')
-
-
-
