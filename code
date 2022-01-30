@@ -7,11 +7,6 @@ Created on Fri Jan 28 12:40:48 2022
 """
 
 import pandas as pd
-import numpy as np
-import datetime as dt
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import datetime
 import plotly.express as px
 
 from dataprep.clean import clean_phone,validate_phone
@@ -25,9 +20,17 @@ from dash import html
 from dash.dependencies import Input, Output
 import dash_table
 
+
+import dash_bootstrap_components as dbc
+
 app = dash.Dash(__name__)
 
+app = dash.Dash(
+                external_stylesheets=[dbc.themes.BOOTSTRAP],
+                suppress_callback_exceptions=True,
+      )
 
+app.title = 'Takehome Test'
 
 
 
@@ -124,6 +127,9 @@ dupework['work'].value_counts()
 dupework.loc[dupework['work']=='Smith and Sons']['work state'].value_counts()
 '''
 
+
+df['city'].value_counts()
+
 #Split first and last Name
 
 df[['First Name','Last Name']]=df.name.str.split(expand=True)
@@ -146,12 +152,15 @@ print('There are ' + str(len(emptyname)) + ' rows with no name. These rows can b
 df[['Date']] = df['account created on'].str.split(expand=True)[0]
 
 
-#df['Date'] = pd.to_datetime(df['Date'],format='%m/%d/%y')
- 
-
 df['Year created'] = df['Date'].str.replace('.*(?<=/)', '', regex=True)
 
-accountcount=df['Year created'].value_counts(dropna=False)
+
+accountcount = df['Year created'].value_counts(dropna=False).reset_index(drop=False)
+
+accountcount.columns=['Year created', 'Count']
+accountcount=accountcount.sort_values(by='Year created')
+
+
 
 #split email to account and server name
 df[['Email Name','Server']]=df['email'].str.split('@',expand=True)
@@ -239,6 +248,30 @@ mapfig = px.choropleth(data_frame = df,
 
 
 
+## Line chart for accounts created over the years
+df=df.join(df['Year created'].value_counts(), on='Year created', lsuffix='', rsuffix =' count')
+
+accounts = px.line(
+             data_frame = accountcount,
+             x = 'Year created',
+             y = 'Count', 
+             )
+
+
+
+## bar graph for most accounts opened per city
+
+
+city_account_count = df['city'].value_counts(dropna=False).reset_index(drop=False)
+
+city_account_count.columns=['City', 'Count']
+
+
+top_cities = px.bar(data_frame = city_account_count,
+             x = 'City',
+             y = 'Count',
+             orientation = 'h'            
+             )
 
 
 
@@ -253,24 +286,144 @@ mapfig = px.choropleth(data_frame = df,
 
 
 
+#############################################################################
+
+colors = {"background": "#011833", "text": "#7FDBFF"}
+
+
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+SIDEBAR_STYLE = {
+    "position": "fixed",
+    "top": 0,
+    "left": 0,
+    "bottom": 0,
+    "width": "16rem",
+    "padding": "2rem 1rem",
+    "background-color": "#022248",
+    "text": "#7FDBFF",
+    
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+CONTENT_STYLE = {
+    "margin-left": "18rem",
+    "margin-right": "2rem",
+    "padding": "1rem 1rem",
+    "background-color": "#022248",
+    "text": "#7FDBFF",
+    'borderWidth':0,
+   
+}
 
 
 
 
-'''
+sidebar = html.Div(
+    [
+        html.H2("Online Sales", className="display-4"),
+        html.Hr(),
+        html.P(
+            "Pick a category you would like displayed", className="lead"
+        ),
+        dbc.Nav(
+            [
+                dbc.NavLink("Home", href="/", active="exact"),
+                dbc.NavLink("Account Information", href="/Account-Information", active="exact"),
+            ],
+            vertical=True,
+            pills=True,
+        ),
+        
+        
+    ],
+    style=SIDEBAR_STYLE,
+)
+
+content = html.Div(id="page-content", style=CONTENT_STYLE)
+
+
+app.layout = html.Div([dcc.Location(id="url"), sidebar, content],
+                      style={'backgroundColor': colors['background'],
+                             'color': colors['text'],
+                             
+                             },)
+
+
+
+
+@app.callback(Output("page-content", "children"),
+              [Input("url", "pathname")])
+
+
+def render_page_content(pathname):
+    if pathname == "/":
+        return [ 
+            html.H1('Online Sales and Distribution'),
+            
+         
+            
+            html.Div('This dashboard will be used to show visual representations of data. Below is the pertinent information.'
+                     +' For a more detailed visual representation use the side bar to navigate.',
+                   ),
+                
+            
+            
+            
+            dbc.Row([
+            
+                dbc.Col(
+                    
+                    dbc.CardImg(src=app.get_asset_url('img1.jpg'),
+                    style={'height':'6cm'}),
+                    
+                    ),
+                
+                dbc.Col(
+                    dbc.Card(
+                            dbc.CardBody(
+                                [  
+                                    html.H5("Introduction to Dashboards", className="card-title"),
+                                    html.P(
+                                        "This is a dashboard which features a sidebar, cards, images, tables, and interactive visuals to represent data."
+                                        " The intent of this dashboard is to demonstrate the many different features found in Dash."
+                                        ),
+                                    dbc.Button("Korey's Website", size="lg", id= 'Button-1', color="primary",href="https://koreyandmath.wordpress.com"),
+                                    ]
+                                ),
+                            style={'backgroundColor': "#011833",'height':'6cm'},
+                          ),
+                  width=8
+                  )
+                
+                    ],
+                ),
+            
+            html.Div('The table below is a summary of important information. This information can also be found using the tabls to the left. '
+                   ),
+                
+            ]    
+     
+
+
 ####################################################################
 ##Dashboar Layout.
-app.layout = html.Div([
-    html.H1(children='Hello Dash'),
 
-    html.Div(children='Take home'),
     
-    dcc.Graph(
-        id='Map',
-        figure=mapfig
-    ),
+    elif pathname == "/Account Information":
+        
+        return [
+            html.Div([
+            html.H1(children='Hello Dash'),
+
+            html.Div(children='Take home'),
     
-    dash_table.DataTable(
+            dcc.Graph(
+                id='Map',
+                figure=mapfig
+                ),
+    
+            dash_table.DataTable(
                     id='table',
                     columns=[
                         {'name': 'Emails',
@@ -296,14 +449,74 @@ app.layout = html.Div([
                     style_header={'backgroundColor': 'rgb(30, 30, 30)','color': 'white'},
                     style_data={'backgroundColor': 'rgb(50, 50, 50)','color': 'white'},
             ),
+     
+            dcc.Graph(
+                id = 'example-graph0',
+                figure = accounts,
+                ),
+                
+   
     
+             html.Div([ 
+        
+                html.Div([
+                        html.Label("Top Cities Opening Accounts"),
+                        dcc.Dropdown(
+                            id = 'top',
+                            options = [{'label': y, 'value': y }
+                                       for y in list(range(1,50))
+                                       ],
+                            value =  5,
+                            className = "dropdown",
+                            ),
+                        ]   
+                    ),
+   
+                html.Div([
+                dcc.Graph(
+                id = 'horizontal-bar',
+                figure = top_cities,
+                ),
+
+                    ]), 
+
+            ]),
+     ]),
     
+                
+
+]
     
-    ])
+@app.callback(
+        Output(component_id='horizontal-bar', component_property='figure'),
+        Input(component_id='top', component_property='value'), 
+)
+        
+def update_hgraph(top): 
+  
+    
+
+    dff3 = city_account_count.sort_values('Count',ascending=False)[:top].sort_values('Count',ascending=True)
+    dff3 = dff3.fillna("No City Listed")
+    
+    hlinechart = px.bar(
+        data_frame=dff3,
+        x = 'Count',
+        y = 'City',
+        orientation = 'h'
+        )
+
+            
+
+    hlinechart.update_layout(
+        plot_bgcolor=colors["background"],
+        paper_bgcolor=colors["background"],
+        font_color=colors["text"],
+     )
+    
 
 
-
-
+    return hlinechart
 
 
 
@@ -314,7 +527,9 @@ if __name__ == '__main__':
         app.run_server(host = '127.0.0.1', debug=True, port = 8060)                  
     
 
-'''
+
 
 df.to_csv('/Users/koreynishimoto/Desktop/Takehome/newtakehome.csv')
+
+
 
