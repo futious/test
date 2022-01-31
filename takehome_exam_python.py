@@ -8,6 +8,7 @@ Created on Fri Jan 28 12:40:48 2022
 
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 from dataprep.clean import clean_phone,validate_phone
 
@@ -45,8 +46,16 @@ df = pd.read_csv('/Users/koreynishimoto/Desktop/Takehome/'
 #df = df.fillna('None')
 
 
+
+
+df[['state','work state']]
+state= np.where(df["state"] == df["work state"], True, False)
+np.count_nonzero(state)
+
+
 ############################################################
 ##Clean Phone number##
+############################################################
 
 df['phone'] = df['phone'].str.replace(')',') ')
 
@@ -77,15 +86,35 @@ df.insert(7, 'Valid phone', seventh_column)
 
 
 
-#Showed no duplicate rows
-df.drop_duplicates(keep = False, inplace = True)
+############################################################
+#split date from time
+############################################################
 
+
+df[['Date']] = df['account created on'].str.split(expand=True)[0]
+
+
+df['Year created'] = df['Date'].str.replace('.*(?<=/)', '', regex=True)
+
+
+accountcount = df['Year created'].value_counts(dropna=False).reset_index(drop=False)
+
+accountcount.columns=['Year created', 'Count']
+accountcount=accountcount.sort_values(by='Year created')
+
+
+
+
+
+############################################################
+#Duplicates
+############################################################
 
 
 ''' This section would be deleted after generating the report and
 has only been kept for reviewing purposes of the test.
 
-
+df.drop_duplicates(keep = False, inplace = True)
 
 #Checking for duplicates of important information
 
@@ -129,12 +158,30 @@ print(dupwork)
 dupwork['work'].value_counts()
 
 dupwork.loc[dupwork['work']=='Smith and Sons']['work state'].value_counts()
+
+
+#shows data frame as ordered by company name
+city = dupwork['work'].value_counts(dropna=False).reset_index(drop=False)
+city.columns = ['Work', 'Count']
+city = city.sort_values('Work')
+
+
+Adamsgroup = df.loc[df['work']=='Adams Group'][['work','state','work state','Year created']]
+
+AdamsInc = df.loc[df['work']=='Adams Inc'][['work','state','work state','Year created']]
+
+AdamsLLC = df.loc[df['work']=='Adams LLC'][['work','state','work state','Year created']]
+
+AdamsPLC = df.loc[df['work']=='Adams PLC'][['work','state','work state','Year created']]
+
+
 '''
 
 
-df['city'].value_counts()
-
+############################################################
 #Split first and last Name
+############################################################
+
 
 df[['First Name','Last Name']]=df.name.str.split(expand=True)
 
@@ -152,21 +199,13 @@ print('There are ' + str(len(emptyname)) + ' rows with no name. These rows can b
 
 
 
-#split date from time
-df[['Date']] = df['account created on'].str.split(expand=True)[0]
 
-
-df['Year created'] = df['Date'].str.replace('.*(?<=/)', '', regex=True)
-
-
-accountcount = df['Year created'].value_counts(dropna=False).reset_index(drop=False)
-
-accountcount.columns=['Year created', 'Count']
-accountcount=accountcount.sort_values(by='Year created')
-
-
-
+############################################################
 #split email to account and server name
+############################################################
+
+
+
 df[['Email Name','Server']]=df['email'].str.split('@',expand=True)
 
 emailcount=df['Server'].value_counts(dropna=False)
@@ -183,8 +222,10 @@ print( ' There are ' + str(len(df[df['address'].isnull()])) +
 
 
 
-
+############################################################
 #Choropleth Map
+############################################################
+
 
 code = {'Alabama': 'AL',
         'Alaska': 'AK',
@@ -263,7 +304,11 @@ mapfig.update_layout(
 
 
 
-## Line chart for accounts created over the years
+###############################################################################
+#Line chart for accounts created over the years
+#############################################################################
+
+
 df=df.join(df['Year created'].value_counts(), on='Year created', lsuffix='', rsuffix =' count')
 
 accounts = px.line(
@@ -274,7 +319,9 @@ accounts = px.line(
 
 
 
-## bar graph for most accounts opened per city
+###############################################################################
+#bar graph for most accounts opened per city
+#############################################################################
 
 
 city_account_count = df['city'].value_counts(dropna=False).reset_index(drop=False)
@@ -298,10 +345,10 @@ top_cities = px.bar(data_frame = city_account_count,
 
 
 
-
-
-
 #############################################################################
+#start of styling of dashboard
+#############################################################################
+
 
 colors = {"background": "#011833", "text": "#7FDBFF"}
 
@@ -365,6 +412,13 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content],
                              'color': colors['text'],
                              
                              },)
+
+
+
+#############################################################################
+#creating call back for side bar
+#############################################################################
+
 
 
 
@@ -451,8 +505,10 @@ def render_page_content(pathname):
      
 
 
-####################################################################
-##Dashboar Layout.
+#############################################################################
+#creating call back for side bar
+#############################################################################
+
 
     
     elif pathname == "/Account-Information":
@@ -491,7 +547,7 @@ def render_page_content(pathname):
                         dcc.Dropdown(
                             id = 'top',
                             options = [{'label': y, 'value': y }
-                                       for y in list(range(1,50))
+                                       for y in list(range(1,101))
                                        ],
                             value =  5,
                             className = "dropdown",
@@ -513,6 +569,15 @@ def render_page_content(pathname):
                 
 
 ]
+    
+
+
+
+#############################################################################
+#creating call back for side bar
+#############################################################################
+
+
     
 @app.callback(
         Output(component_id='horizontal-bar', component_property='figure'),
